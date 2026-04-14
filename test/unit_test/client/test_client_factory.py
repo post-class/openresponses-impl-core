@@ -41,8 +41,29 @@ def _create_mock_openai_module():
         mock_openai_responses_client_module.OpenAIResponsesClient = MagicMock()
 
 
+def _create_mock_google_module():
+    """Create openresponses_impl_client_google module for testing"""
+    if "openresponses_impl_client_google" not in sys.modules:
+        mock_module = ModuleType("openresponses_impl_client_google")
+        mock_client_module = ModuleType("openresponses_impl_client_google.client")
+        mock_gemini_responses_client_module = ModuleType(
+            "openresponses_impl_client_google.client.gemini_responses_client"
+        )
+
+        # Build module hierarchy
+        sys.modules["openresponses_impl_client_google"] = mock_module
+        sys.modules["openresponses_impl_client_google.client"] = mock_client_module
+        sys.modules["openresponses_impl_client_google.client.gemini_responses_client"] = (
+            mock_gemini_responses_client_module
+        )
+
+        # Create mock for GeminiResponsesClient class
+        mock_gemini_responses_client_module.GeminiResponsesClient = MagicMock()
+
+
 # Create mock module before starting tests
 _create_mock_openai_module()
+_create_mock_google_module()
 
 
 class TestClientFactory:
@@ -163,6 +184,47 @@ class TestClientFactory:
 
         assert result == mock_client_instance
 
+    @patch("openresponses_impl_client_google.client.gemini_responses_client.GeminiResponsesClient")
+    def test_create_google_client(self, mock_gemini_client_class):
+        """Test Google Gemini client creation"""
+        # Setup mock
+        mock_client_instance = MagicMock(spec=BaseResponsesClient)
+        mock_gemini_client_class.return_value = mock_client_instance
+
+        result = ClientFactory.create_client(
+            vendor="google",
+            model="gemini-2.5-pro",
+            deployment_platform="vertex-ai",
+            api_key="test-google-api-key",
+        )
+
+        mock_gemini_client_class.assert_called_once_with(
+            model="gemini-2.5-pro",
+            google_api_key="test-google-api-key",
+        )
+
+        assert result == mock_client_instance
+
+    @patch("openresponses_impl_client_google.client.gemini_responses_client.GeminiResponsesClient")
+    def test_create_google_client_without_deployment_platform(self, mock_gemini_client_class):
+        """Test Google Gemini client creation when deployment_platform is omitted"""
+        # Setup mock
+        mock_client_instance = MagicMock(spec=BaseResponsesClient)
+        mock_gemini_client_class.return_value = mock_client_instance
+
+        result = ClientFactory.create_client(
+            vendor="google",
+            model="gemini-2.5-pro",
+            api_key="test-google-api-key",
+        )
+
+        mock_gemini_client_class.assert_called_once_with(
+            model="gemini-2.5-pro",
+            google_api_key="test-google-api-key",
+        )
+
+        assert result == mock_client_instance
+
     def test_unsupported_vendor_raises_error(self):
         """Verify that ValueError is raised for unsupported vendor"""
         with pytest.raises(ValueError) as exc_info:
@@ -245,6 +307,27 @@ class TestClientFactory:
 
         assert result == mock_client_instance
 
+    @patch("openresponses_impl_client_google.client.gemini_responses_client.GeminiResponsesClient")
+    def test_create_google_client_with_none_values(self, mock_gemini_client_class):
+        """Verify that None values are handled appropriately for Google Gemini"""
+        # Setup mock
+        mock_client_instance = MagicMock(spec=BaseResponsesClient)
+        mock_gemini_client_class.return_value = mock_client_instance
+
+        result = ClientFactory.create_client(
+            vendor="google",
+            model=None,
+            deployment_platform=None,
+            api_key=None,
+        )
+
+        mock_gemini_client_class.assert_called_once_with(
+            model="",
+            google_api_key=None,
+        )
+
+        assert result == mock_client_instance
+
 
 class TestClientFactoryIntegration:
     """Integration tests for ClientFactory (including actual imports)"""
@@ -266,6 +349,22 @@ class TestClientFactoryIntegration:
 
         # Verify that OpenAIResponsesClient was called
         mock_openai_client_class.assert_called_once()
+        assert result == mock_client_instance
+
+    @patch("openresponses_impl_client_google.client.gemini_responses_client.GeminiResponsesClient")
+    def test_google_client_import_path(self, mock_gemini_client_class):
+        """Verify that the import path for GeminiResponsesClient is correct"""
+        # Setup mock
+        mock_client_instance = MagicMock(spec=BaseResponsesClient)
+        mock_gemini_client_class.return_value = mock_client_instance
+
+        result = ClientFactory.create_client(
+            vendor="google",
+            model="gemini-2.5-pro",
+            api_key="test-google-api-key",
+        )
+
+        mock_gemini_client_class.assert_called_once()
         assert result == mock_client_instance
 
 

@@ -17,8 +17,8 @@ class ClientFactory:
         """Create an LLM client corresponding to the specified request.
 
         Args:
-            vendor: Vendor name (e.g., "openai", "anthropic")
-            model: Model name (e.g., "gpt-4", "claude-3")
+            vendor: Vendor name (e.g., "openai", "google")
+            model: Model name (e.g., "gpt-4", "gemini-2.5-pro")
             deployment_platform: Deployment platform (e.g., "azure", "openai", "aws")
             api_key: API key
             endpoint: Endpoint URL (used for Azure OpenAI)
@@ -39,6 +39,11 @@ class ClientFactory:
             api_key="your-openai-api-key"
             endpoint=""
             api_version=""
+
+            Example: For Google Gemini
+            vendor="google"
+            model="gemini-2.5-pro"
+            api_key="your-google-api-key"
 
         Returns:
             Client instance
@@ -74,9 +79,21 @@ class ClientFactory:
                 openai_api_key=api_key or "",
             )
 
+        # For Google Gemini
+        if vendor == "google":
+            from openresponses_impl_client_google.client.gemini_responses_client import (
+                GeminiResponsesClient,
+            )
+
+            return GeminiResponsesClient(
+                model=model or "",
+                google_api_key=api_key,
+            )
+
         raise ValueError(
             f"Unsupported vendor/deployment_platform combination: "
             f"vendor={vendor}, deployment_platform={deployment_platform}. "
             f"Supported: vendor=openai + deployment_platform=azure or "
-            f"vendor=openai + deployment_platform=openai/empty"
+            f"vendor=openai + deployment_platform=openai/empty or "
+            f"vendor=google"
         )

@@ -139,6 +139,8 @@ class FunctionToolParam(BaseModel):
 
 
 class GenericToolParam(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     type: constr(min_length=1, max_length=128)
     description: str | None = None
 
@@ -476,6 +478,8 @@ class FunctionTool(BaseModel):
 
 
 class GenericTool(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     type: constr(min_length=1, max_length=128) = Field(
         ..., description="The non-function tool type."
     )

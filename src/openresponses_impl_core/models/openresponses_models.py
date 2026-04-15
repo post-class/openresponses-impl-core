@@ -404,6 +404,10 @@ class FunctionCall(BaseModel):
     name: str = Field(..., description="The name of the function that was called.")
     arguments: str = Field(..., description="The arguments JSON string that was generated.")
     status: FunctionCallStatus
+    extensions: dict[str, Any] | None = Field(
+        None,
+        description="Provider-specific extension values for this function call item.",
+    )
 
 
 class FunctionCallOutputStatusEnum(Enum):
@@ -978,6 +982,10 @@ class FunctionCallItemParam(BaseModel):
     )
     arguments: str = Field(..., description="The function arguments as a JSON string.")
     status: FunctionCallStatus | None = None
+    extensions: dict[str, Any] | None = Field(
+        None,
+        description="Provider-specific extension values for this function call item.",
+    )
 
 
 class FunctionCallOutputItemParam(BaseModel):
